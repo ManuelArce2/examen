@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación de análisis facial</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Aplicación de análisis facial</h1>
+
+    <!-- Subir nuevas imágenes -->
+    <form id="uploadForm">
+        <label>Seleccione imágenes:
+            <input type="file" name="files" accept=".jpg,.jpeg,.png" multiple />
+        </label>
+        <button type="submit">Analizar imágenes</button>
+    </form>
+
+    <!-- Resultados del análisis -->
+    <div id="results" style="display: none;">
+        <h2>Resultados del análisis</h2>
+        <div id="resultImages"></div>
+    </div>
+
+    <!-- Indicador de carga -->
+    <div id="loading" style="display: none;">
+        <p>Cargando...</p>
+    </div>
+
+    <!-- Visualización de errores -->
+    <div id="error" style="display: none; color: red;">
+    </div>
+
+    <!-- Imágenes cargadas previamente -->
+    {% if images %}
+    <h2>Imágenes cargadas previamente</h2>
+    <div>
+        {% for image in images %}
+        <div>
+            <img src="{{ url_for('static', filename='uploads/' + image) }}" 
+                 alt="{{ image }}" 
+                 onclick="analyzeExisting('{{ image }}')" 
+                 style="cursor: pointer; max-width: 150px;">
+            <p>{{ image }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <script>
+        function showLoading() {
+            $('#loading').show();
+            $('#error').hide();
+            $('#results').hide();
+        }
+
+        function hideLoading() {
+            $('#loading').hide();
+        }
+
+        $(document).ready(function() {
+            $('#uploadForm').on('submit', function(e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                showLoading();
+                
+                $.ajax({
+                    url: '/analyze',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        hideLoading();
+                        $('#results').show();
+                        $('#resultImages').empty();  // Limpiar resultados previos
+
+                        // Mostrar imágenes procesadas
+                        $.each(response.images, function(filename, images) {
+                            var imageHtml = `
+                                <h3>${filename}</h3>
+                                <div>
+                                    <p>Imagen Original:</p>
+                                    <img src="data:image/png;base64,${images.original}" style="max-width: 300px;">
+                                </div>
+                                <div>
+                                    <p>Imagen Invertida:</p>
+                                    <img src="data:image/png;base64,${images.flipped}" style="max-width: 300px;">
+                                </div>
+                                <div>
+                                    <p>Imagen Aumentada:</p>
+                                    <img src="data:image/png;base64,${images.brightened}" style="max-width: 300px;">
+                                </div>
+                                <div>
+                                    <p>Imagen Rotada (180 grados):</p>
+                                    <img src="data:image/png;base64,${images.rotated}" style="max-width: 300px;">
+                                </div>
+                            `;
+                            $('#resultImages').append(imageHtml);
+                        });
+                    },
+                    error: function(xhr) {
+                        hideLoading();
+                        $('#error').show().text(xhr.responseJSON?.error || 'Ocurrió un error');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

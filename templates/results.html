@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados</title>
+</head>
+<body>
+    <h1>Resultados</h1>
+    <table border="1">
+        <tr>
+            <th>Imagen Original</th>
+            <th>Imagen Procesada</th>
+        </tr>
+        {% for original, processed in zip(original_images, processed_images) %}
+        <tr>
+            <td><img src="{{ original }}" alt="Original" style="width: 300px;"></td>
+            <td><img src="{{ processed }}" alt="Procesada" style="width: 300px;"></td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="/">Subir más imágenes</a>
+</body>
+</html>
